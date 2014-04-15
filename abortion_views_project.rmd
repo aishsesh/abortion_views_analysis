@@ -1,0 +1,113 @@
+
+### Relationship between highest degree attained and opinion on abortion
+
+```{r echo=FALSE}
+load(url("http://bit.ly/dasi_gss_data"))
+```
+
+
+### Introduction:
+
+In this project, we will be analyzing the relationship between the highest degree attained by a person and his/her opinion on a woman getting an abortion if she wants it for any reason. 
+
+Abortion has been a very divisive public topic in the United States for several decades now. Where an opinion on abortion is concerned, there are mainly two types of people: "Pro-Choice" who favor abortion and "Pro-Life" who are against abortion. Even among those who favor it, they have differing opinions on under what circumstances they favor it. An interesting thing to note is that over the last 50 years about half of the population has favored abortions and the other half has been against them and this percentage has not varied much. This divide is also political; a large majority of the republican party is "Pro-Life" and the democrats "Pro-Choice".
+
+Understanding why the country has been so divided on this topic could help in potentially introducing a legislation that satisfies a majority of the population. A first step in this process would be analyzing the various factors that play a role in a person forming their opinion on abortion. Education, I believe, could be one such factor and hence we are trying to find a correlation, if it exists.
+
+### Data:
+
+The data was collected in the United States between 1972 and 2012 through computer-assisted personal interviews (CAPI), face-to-face interviews or telephone interviews of non-institutionalized, English or Spanish speaking persons 18 years of age or older, living in the United States. The sampling process is described in detail here: 
+http://publicdata.norc.org:41000/gss/documents//BOOK/GSS_Codebook_AppendixA.pdf 
+
+A case in this study is an English/Spanish speaking person living in the US who is 18 years or older and is not institutionalized and for each case we have personal information and their opinions on various topics.
+The two variables i will be studying are the highest degree a person has obtained (categorical - ordinal: possible values Less than High School, High School, Junior College, Bachelor, Graduate, N/A) and view on whether a woman can get an abortion if she wants it for any reason  (categorical: possible values Yes, No, N/A).
+
+The data collection process was an observational study. The surveys collected opinions of people but it was just an observation. There is no action/interference from the people conducting the study that could impact these opinions. Hence we can only establish correlations between these two variables and not causality. Since random sampling was used, the findings can be generalized to all non-institutionalized English speaking persons of 18 years or older. Since Spanish speaking persons were only included post 2004, we cannot generalize the results to these persons. There is a very small factor of bias due to non respondents (e.g. people who were not at home on weekdays) but several measures were taken to mitigate these biases (like only interviewing after 3pm on weekdays and weekends etc.)
+
+<br><br>
+### Exploratory data analysis:
+
+Given below is a table and the corresponding mosaic plot between the highest degree of a respondent and their opinion on whether a woman can get an abortion if she wants to for any reason. The plot shows reason to believe these variables are related. As the highest degree increases, from 'less than high school' to 'high school' till 'graduate degree', the percentage of people who say Yes increases. It is seen that among people who have  bachelors degree or higher the percentage who think a woman can have an abortion is greater than the percentage who think she cannot. There is a positive correlation between highest degree achieved and opinions favoring abortions if the woman wants it for any reason. Out of the 57061 rows in the data set only 31281 has non-NA values in both the 'degree' and 'abany' fields:
+
+
+```{r fig.width =  8, fig.height= 6}
+
+gss_subset = gss[,c("degree","abany")]
+#Cleaning the data
+g = na.omit(gss_subset)
+
+t =table(g$degree, g$abany)
+t
+mosaicplot(t)
+```
+
+
+### Inference:
+
+<b>Hypotheses</b>
+
+<i>Null Hypothesis</i>: Highest degree attained and proportion of people favoring abortion for any reason are independent. The proportion does not vary based on the highest degree.
+
+<i>Alternate Hypothesis</i>: Highest degree attained and proportion of people favoring abortion for any reason are dependent. The proportion varies based on the highest degree.
+
+<b>Choice of method</b>
+Since we are dealing with two categorical variables(<i>degree</i> and <i>abany</i>) and degree has more than 2 levels, we will use the <b>Chi-square test of independence</b>. The Chi-square test of independence quantifies how different the observed counts for various categories are different from the expected counts. Assuming that the opinion on abortion is independent from degree, the proportion of 'Yes' for abortion in the entire population is the expected proportion in each of the categories (degrees). A very large deviation between expected and observed values provides strong evidence for the alternative hypothesis.
+
+The observations in this sample were obtained from random sampling. Also we are analyzing the responses of 31281 persons which is definitely less than 10% of the target population (Americans who speak English/Spanish and are above 18 years old). 
+Also no person can be both for and against abortion or have multiple highest degrees. Hence each case contributes to only one cell. Thus we can see that all the conditions for independence are met. Also each cell in the date (refer to table above) has several hundred cases(greater than 5). So, all the conditions for performing the chi-square test of independence are met.  
+
+<b>Calculations:</b>
+
+As a first step the expected value for each cell was found. For the 'Yes' cells this was obtained by taking the proportion of Yes in the whole population and multiplying by the total number of respondents with that level of degree. For the 'No' cells, the proportion of No in the total population was taken and a similar computation was made. Below is the code and the table with the expected values. 
+
+```{r}
+#total for every row (corresponds to each degree level)
+rowTotal = t[,1] + t[,2]
+#total for every column (total Yes's and total No's)
+colTotal = t[1,] + t[2,] + t[3,] + t[4,] + t[5,]
+#total observations
+total = sum(t)
+#matrix for storing expected values
+exp = matrix(nrow=5, ncol=2)
+#setting the expected value after rounding
+for(i in 1:5)
+ for(j in 1:2)
+ exp[i,j] = round((rowTotal[i]*colTotal[j])/total)
+
+exp
+```
+The chi_square value is calculated and displayed below.
+```{r}
+chi_sq_value = sum(((t-exp)^2)/exp)
+
+chi_sq_value
+```
+The chi_square_value is very high and hence the p value should be very small. We have a 5X2 matrix (5 levels of degree and 2 levels of abany). The degrees of freedom in this case is (R-1)X(C-1) = (5-1)X(2-1) = 4. Using the line of code below we calculate the p value.
+```{r}
+pchisq(chi_sq_value, 4, lower.tail = FALSE)
+```
+We can see that the p value is very very small (6.431e^ -269) and is almost equal to zero. So at even the 1% significance level (0.01) we can reject the null hypothesis. The p value in this case is the probability of getting the given chi-square value or a more extreme value (larger value of chi-sq) given that the null hypothesis is true. Since this probability is almost zero we can conclude that the null hypothesis can be rejected and that there is a strong correlation between the highest level of degree attained by a person and their opinion on a woman getting an abortion for any reason. 
+
+A confidence interval is not applicable for the given situation (categorical variable with > 2 levels) and hence was not calculated.
+
+### Conclusion:
+
+From the above hypothesis test using chi-square test of independence we were able to conclude that a person's highest degree and their opinion on abortion are dependent variables. From the table and plots we could see that people with higher degrees were pro-abortion and vice versa. The correlation is positive (if favoring abortion is considered as 1 and not favoring is 0) and strong since we rejected the null hypothesis at the 1% significance level. These results can be generalized to the above mentioned population. However because it is an observational study, we cannot establish causality. As future studies, understanding relationships between some other attributes (economic status, region etc) of a person and opinions on abortions would be a good next step in understanding the contributing factors in a person's opinion on whether they are pro or anti abortion.
+
+<br> <br>
+### Data Citation:
+
+Smith, Tom W., Michael Hout, and Peter V. Marsden. General Social Survey, 1972-2012 [Cumulative File]. ICPSR34802-v1. Storrs, CT: Roper Center for Public Opinion Research, University of Connecticut /Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributors], 2013-09-11. doi:10.3886/ICPSR34802.v1
+
+Persistent URL: http://doi.org/10.3886/ICPSR34802.v1
+
+The data can be loaded in R from here: http://bit.ly/dasi_gss_data which is a sample of selected indicators.
+
+<br>
+### Data Set:
+
+The relevant columns are degree (row 2 in the figure below) and abany (row 12).
+
+```{r}
+head(gss)
+```
