@@ -1,0 +1,3 @@
+(abortion_views_project.rmd) was a project analyzing the relationship between a
+person's highest educational degree and their views on abortion. The file is an R markdown and
+can be used to create an HTML using the knitR framework but also contains R code for the analysis.
